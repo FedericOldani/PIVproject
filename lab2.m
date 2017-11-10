@@ -1,3 +1,5 @@
+
+
 imgmed=zeros(480,640,45);
 for i=1:45,
     load(['depth1_' int2str(i) '.mat']);
@@ -18,6 +20,8 @@ for i=1:length(d),
 end
 
 %% READ IMAGES and GENERATE POINT CLOUDS
+
+
 load('calib_asus.mat');
 im1=imread('rgb_image1_3.png');
 im2=imread('rgb_image2_3.png');
