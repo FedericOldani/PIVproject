@@ -1,33 +1,34 @@
+path='maizena/data_rgb/';
+d=dir([path 'depth1*.mat']);
 
-
-imgmed=zeros(480,640,45);
-for i=1:45,
-    load(['depth1_' int2str(i) '.mat']);
+imgmed=zeros(480,640,length(d));
+for i=1:length(d)
+    load([path 'depth1_' int2str(i) '.mat']);
     imagesc(depth_array);
     imgmed(:,:,i)=double(depth_array)/1000;
     pause(.1)
     drawnow;
 end
 bg=median(imgmed,3);
-d=dir('depth1*.mat');
-for i=1:length(d),
-    load(d(i).name);
+for i=1:length(d)
+    load([path d(i).name]);
     absimage=abs(double(depth_array)/1000-bg)>.25;
-    imagesc(bwareaopen(absimage, 2500));
+    imagesc(absimage);
     [L, num]=bwlabel(absimage);
+    L=bwareaopen(L, 3000);
     colormap(winter);
     pause(0.5);
 end
 
 %% READ IMAGES and GENERATE POINT CLOUDS
-
+path='maizena/data_rgb/';
 
 load('calib_asus.mat');
-im1=imread('rgb_image1_3.png');
-im2=imread('rgb_image2_3.png');
-load('depth1_3.mat')
+im1=imread([path 'rgb_image1_3.png']);
+im2=imread([path 'rgb_image2_3.png']);
+load([path 'depth1_3.mat'])
 dep1=depth_array;
-load('depth2_3.mat')
+load([path 'depth2_3.mat'])
 dep2=depth_array;
 %dep2(find(dep2(:)>4000))=0;
 xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
@@ -97,4 +98,4 @@ for i=1:length(d),
     %showPointCloud(pc1)
     pcshow(pcmerge(pc1,pc2,0.001));
     drawnow;
-end
+    
