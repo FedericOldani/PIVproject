@@ -89,39 +89,50 @@ i=1;
     obj3d=xyz1(find(L1~=0),:);
     
     %some optimization on the object
-        obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
-        for v=1:obj3d(end)
-            cont=0;
-            for u=1:obj3d(end)
-                if u~=v
-                    cont++;
-                    err=abs(obj3d(u,v,3));
-                end
-            end
-            err=err/cont;
-            if(err
-        end
+%         obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
+%         for v=1:obj3d(end)
+%             cont=0;
+%             for u=1:obj3d(end)
+%                 if u~=v
+%                     cont++;
+%                     err=abs(obj3d(u,v,3));
+%                 end
+%             end
+%             err=err/cont;
+%             if(err
+%         end
     hold on;
     plot3(obj3d(:,1),obj3d(:,2),obj3d(:,3),'.','MarkerSize',10); hold on;
     
-    %[s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
+    figure;
+    imagesc(objects1);
+    figure;
+hist(obj3d(:,3))
     
-    %plot3(xyz1(:,1),xyz1(:,2),xyz1(:,3),'.','MarkerSize',10); hold on;
-    %plotminbox(corner);
-    %hold on;
+%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
+%     
+%     %plot3(xyz1(:,1),xyz1(:,2),xyz1(:,3),'.','MarkerSize',10); hold on;
+%     plotminbox(corner);
+    hold on;
     %%
     
 
-    obj3d=xyz21(find(L2==1),:);
+    obj3d=xyz21(find(L2~=0),:);
     obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
     plot3(obj3d(:,1),obj3d(:,2),obj3d(:,3),'.','MarkerSize',10); hold on;
 
     %plot3(obj3d_2(:,1),obj3d_2(:,2),obj3d_2(:,3),'.','MarkerSize',10); hold on;
 
-    %[s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
-
-%     dep_test2=dep2;
-%     dep_test2(find(L2~=1))=0;
-%     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);% end
+    figure;
+    imagesc(objects2);
+    figure;
+hist(obj3d(:,3))
+    
+%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
+%  plotminbox(corner);
+%     hold on;
+%      dep_test2=dep2;
+%      dep_test2(find(L2~=1))=0;
+% %     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);% end
 %     xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
     
