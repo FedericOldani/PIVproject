@@ -86,9 +86,21 @@ pause(0.5);
 
 i=1;
     
-    obj3d=xyz1(find(L1==1),:);
+    obj3d=xyz1(find(L1~=0),:);
+    
+    %some optimization on the object
         obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
-
+        for v=1:obj3d(end)
+            cont=0;
+            for u=1:obj3d(end)
+                if u~=v
+                    cont++;
+                    err=abs(obj3d(u,v,3));
+                end
+            end
+            err=err/cont;
+            if(err
+        end
     hold on;
     plot3(obj3d(:,1),obj3d(:,2),obj3d(:,3),'.','MarkerSize',10); hold on;
     
