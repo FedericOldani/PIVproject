@@ -1,7 +1,7 @@
 
 path='maizena/data_rgb/';
 d=dir([path 'depth1*.mat']);
-
+%testing this file, for uploading purposes
 imgmed=zeros(480,640,length(d));
 for i=1:length(d)
     load([path 'depth1_' int2str(i) '.mat']);
