@@ -22,7 +22,7 @@ tr=rt_computation(im1,dep1,im2,dep2);
 
 %eliminate bg for all images in dataset
 %for i=1:length(d)
-i=5
+i=12
     fprintf('%d...',i);
     
     % ----------------------   objects in image1   ----------------------
@@ -84,30 +84,12 @@ pause(0.5);
 
 
 %% TEST
-i=1;
-%for i=1:num1;
+
+
     
     obj3d_1=xyz1(find(L1~=0),:);
     obj3d_1 = unique(obj3d_1,'rows');
-    r=find(obj3d_1(:)==[0 0 0]);
-obj3d_1(r(1),:)=[];
 
-    
-
-  %  hold on;
-   % plot3(obj3d_1(:,1),obj3d_1(:,2),obj3d_1(:,3),'.','MarkerSize',10); hold on;
-    
-%     figure;
-%     imagesc(objects1);
-%     figure;
-% [counts,centre]=hist(obj3d(:,3));
-
-    
-%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
-%     
-%     %plot3(xyz1(:,1),xyz1(:,2),xyz1(:,3),'.','MarkerSize',10); hold on;
-%     plotminbox(corner);
-    hold on;
     %%
     
 
@@ -115,25 +97,38 @@ obj3d_1(r(1),:)=[];
     obj3d_2 = unique(obj3d_2,'rows');
    
 
-    %obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
- %   plot3(obj3d_2(:,1),obj3d_2(:,2),obj3d_2(:,3),'.','MarkerSize',10); hold on;
 
-    %plot3(obj3d_2(:,1),obj3d_2(:,2),obj3d_2(:,3),'.','MarkerSize',10); hold on;
-
-%     figure;
-%     imagesc(objects2);
-%     figure;
-%     hist(obj3d(:,3))
-% [npx,centre]=hist(obj3d(:,3));
-% npx(npx<1500)=0; %some filter to remove small 3d objects
 %%
 obj3d=[obj3d_1; obj3d_2];
-obj3d=sortrows(obj3d);
-%euclidian distance
-distance=0.01;
 
-group=11;
+
+
+
+group=2000;
+tic;
 [idx,cc]=kmeans(obj3d,group);
+toc;
+group=max(idx);
+% for i=1:group
+%     l=length(find(idx==i));
+%     if l<2000
+%         idx(find(idx==i))=0;
+%     end
+% end
+% group=5;
+% [idx,cc]=kmeans(obj3d,group);
+
+
+distance=8;
+idxcc=clusterdata(cc,distance);
+toc;
+
+%%
+% 
+ for w=1:group
+     idx(find(idx==w))=idxcc(w)+group;
+ end
+idx=idx-group;
 
 for i=1:group
     l=length(find(idx==i));
@@ -143,72 +138,16 @@ for i=1:group
 end
 
 
-[idxcc,b]=cluster_by_eucldist(cc,0.3);
- for z=1:group
-     idx(find(idx==z))=idxcc(z)+group;%non posso mettere senza group altrimenti si mischiano gli indici
- end
- %torno ai numeri normali
-idx=idx-group;
-
-
-
-
+%%
  pcshow(pcmerge(pc1,pc2,0.001));
-
-for n=1:b
-hold on;
-plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
-  [s,corner,s,s]=minboundbox(obj3d(idx==b,1),obj3d(idx==b,2),obj3d(idx==b,3));
-  plotminbox(corner);
-hold on;
-end
-
-%%
-obj3d=[obj3d_1; obj3d_2];
-
-i=10;
-flag=1;
-while flag==1 && i>1
-    flag=0;
-    [idx,n]=kmeans(obj3d,i);
-    for f=1:i
-        r=find(idx==f);
-        if length(r)<4000
-            idx(idx==f)=0;
-            flag=1;
-        end
+for n=1:max(idx)
+    hold on;
+    if length(find(idx==n))~=0 
+    plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+        [s,corner,s,s]=minboundbox(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'v',1);
+        plotminbox(corner);
+       fprintf("oooo>");
+    hold on;
     end
-    i=i-1;
 end
 
-pcshow(pcmerge(pc1,pc2,0.001));
-
-for b=1:(i+1)
-hold on;plot3(obj3d(idx==b,1),obj3d(idx==b,2),obj3d(idx==b,3),'.','MarkerSize',10); hold on;
-end
-
-
-%%
-%try to separete objs
-% k=1;
-% obj(1)=0;
-% obj(2)=centre(end);
-% for count=2:length(centre)
-%     if npx(count)==0 && npx(count-1)~=0
-%         obj(2)=0.5*(centre(count)+centre(count-1));
-%         num2=num2+1;
-%         =(find((obj3d(:,3)<obj(2))))=num2 && (obj3d(:,3)>obj(1))))=num2;
-%         k=k+1;
-%         obj(k,1)=centre(count);
-%     end
-% end
-
-  %%  
-%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
-%  plotminbox(corner);
-%     hold on;
-%      dep_test2=dep2;
-%      dep_test2(find(L2~=1))=0;
-% %     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);% end
-%     xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
-    

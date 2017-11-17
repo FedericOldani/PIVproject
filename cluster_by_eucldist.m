@@ -7,7 +7,7 @@ for i=1:length(obj)
            idx(i)=cluster;
        end
        for k=i+1:length(obj)
-           E_distance = sqrt(sum((obj(i)-obj(k)).^2));
+           E_distance = sqrt(sum((obj(i,:)-obj(k,:)).^2));
            if E_distance<distance
                idx(k)=idx(i);
            end
