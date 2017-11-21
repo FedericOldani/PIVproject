@@ -20,14 +20,16 @@ dep2=depth_array;
 
 tr=rt_computation(im1,dep1,im2,dep2);
 
+depdir=dir([path 'depth1*.mat']);
+
 %eliminate bg for all images in dataset
-%for i=1:length(d)
-i=12
+%for i=1:length(depdir)
+i=10;%problem with 6,7
     fprintf('%d...',i);
     
     % ----------------------   objects in image1   ----------------------
     
-    depdir=dir([path 'depth1*.mat']);
+    
     load([path depdir(i).name]);
     dep1=depth_array;
     objects1=remove_bg(dep1,bg1);
@@ -102,23 +104,17 @@ pause(0.5);
 obj3d=[obj3d_1; obj3d_2];
 
 
-
+%clusterdata is the perfect function to detect objects but it takes too
+%long! Hence, let's simplify the problem. We use kmeans to divided the 3d
+%in 2000 clusters, then we use cluterdata to group nearest clusters.
 
 group=2000;
 tic;
 [idx,cc]=kmeans(obj3d,group);
 toc;
 group=max(idx);
-% for i=1:group
-%     l=length(find(idx==i));
-%     if l<2000
-%         idx(find(idx==i))=0;
-%     end
-% end
-% group=5;
-% [idx,cc]=kmeans(obj3d,group);
 
-
+%default 8
 distance=8;
 idxcc=clusterdata(cc,distance);
 toc;
@@ -144,9 +140,9 @@ for n=1:max(idx)
     hold on;
     if length(find(idx==n))~=0 
     plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
-        [s,corner,s,s]=minboundbox(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'v',1);
-        plotminbox(corner);
-       fprintf("oooo>");
+        p=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
+        plot_box(p);
+       fprintf("printing>");
     hold on;
     end
 end
