@@ -23,13 +23,16 @@ tr=rt_computation(im1,dep1,im2,dep2);
 depdir=dir([path 'depth1*.mat']);
 
 %eliminate bg for all images in dataset
-%for i=1:length(depdir)
-i=10;%problem with 6,7
+for i=1:length(depdir)
+%i=7;%problem with 14 (actually no objects),15 (box not recognized),16 (box not recgnized),17
+
+    close all;
+
     fprintf('%d...',i);
     
-    % ----------------------   objects in image1   ----------------------
+    % ----------------------  get objects in image1   ----------------------
     
-    
+    depdir=dir([path 'depth1*.mat']);
     load([path depdir(i).name]);
     dep1=depth_array;
     objects1=remove_bg(dep1,bg1);
@@ -37,7 +40,7 @@ i=10;%problem with 6,7
     [L1, num1]=bwlabel(objects1);
     
     
-    % ----------------------   objects in image2   ----------------------
+    % ----------------------  get objects in image2   ----------------------
     
     depdir=dir([path 'depth2*.mat']);
     load([path depdir(i).name]);
@@ -56,94 +59,75 @@ i=10;%problem with 6,7
     imdir=dir([path 'rgb_image2_*.png']);
     im2=imread([path imdir(i).name]);
     
-    depdir=dir([path 'depth1_*.mat']);
-    load([path depdir(i).name]);
-    dep1=depth_array;
-    dep1(find(depth_array>2000))=0;
-
-    depdir=dir([path 'depth2_*.mat']);
-    load([path depdir(i).name]);
-    dep2=depth_array;
-    dep2(find(depth_array>2000))=0;
-
+    dep1(find(dep1>2000))=0;%eliminate too far objects
+    dep2(find(dep2>2000))=0;%eliminate too far objects
     
+    %get coordinate in a unique reference system
     xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
     xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
     rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
     rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
     
+    %create point cloud
     pc1=pointCloud(xyz1,'Color',reshape(rgbd1,[480*640 3]));
     pc2=pointCloud(xyz21,'Color',reshape(rgbd2,[480*640 3]));
+   
+    %FOR TEST
     %figure(7);
     %showPointCloud(pc1)
-    figure(3);
-    pcshow(pcmerge(pc1,pc2,0.001));
-    drawnow;
+%     figure(3);
+%     pcshow(pcmerge(pc1,pc2,0.001));
+%     drawnow;
     
-pause(0.5);
+%get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L1~=0)    
+obj3d_1=xyz1(find(L1~=0),:);
+obj3d_1 = unique(obj3d_1,'rows');%optimization, remove rows with duplicated values    
 
+%get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L2~=0)    
+obj3d_2=xyz21(find(L2~=0),:);
+obj3d_2 = unique(obj3d_2,'rows');%optimization, remove rows with duplicated values 
 
+obj3d=[obj3d_1; obj3d_2]; %put all points coordinates together
 
-%% TEST
+%clusterdata() is the perfect function to detect objects but it takes too
+%long! So, let's simplify the problem. We use kmeans() to divided the 3d
+%points in 200 clusters, then we use cluterdata() to group nearest clusters detected through kmeans().
 
-
-    
-    obj3d_1=xyz1(find(L1~=0),:);
-    obj3d_1 = unique(obj3d_1,'rows');
-
-    %%
-    
-
-    obj3d_2=xyz21(find(L2~=0),:);
-    obj3d_2 = unique(obj3d_2,'rows');
-   
-
-
-%%
-obj3d=[obj3d_1; obj3d_2];
-
-
-%clusterdata is the perfect function to detect objects but it takes too
-%long! Hence, let's simplify the problem. We use kmeans to divided the 3d
-%in 2000 clusters, then we use cluterdata to group nearest clusters.
-
-group=2000;
+group=200;
 tic;
 [idx,cc]=kmeans(obj3d,group);
 toc;
 group=max(idx);
 
-%default 8
-distance=8;
+distance=8; %default 8
 idxcc=clusterdata(cc,distance);
-toc;
 
-%%
-% 
+% go back to the original image and set the right index to the right object
  for w=1:group
      idx(find(idx==w))=idxcc(w)+group;
  end
 idx=idx-group;
 
-for i=1:group
-    l=length(find(idx==i));
+for w=1:group
+    l=length(find(idx==w));
     if l<2000
-        idx(find(idx==i))=0;
+        idx(find(idx==w))=0;
     end
 end
 
-
-%%
+%print image pointcloud, print objects inside boxes
  pcshow(pcmerge(pc1,pc2,0.001));
 for n=1:max(idx)
     hold on;
-    if length(find(idx==n))~=0 
-    plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+    if length(find(idx==n))~=0  
+        fprintf("printing>");
+        plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
         p=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
         plot_box(p);
-       fprintf("printing>");
-    hold on;
+        hold on;
     end
 end
 
+pause(5);
+end

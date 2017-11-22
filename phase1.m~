@@ -20,12 +20,17 @@ dep2=depth_array;
 
 tr=rt_computation(im1,dep1,im2,dep2);
 
+depdir=dir([path 'depth1*.mat']);
+
 %eliminate bg for all images in dataset
-%for i=1:length(d)
-i=3
+for i=3:length(depdir)
+%i=15;%problem with 14 (actually no objects),15 (box not recognized),16 (box not recgnized),17
+
+    close all;
+
     fprintf('%d...',i);
     
-    % ----------------------   objects in image1   ----------------------
+    % ----------------------  get objects in image1   ----------------------
     
     depdir=dir([path 'depth1*.mat']);
     load([path depdir(i).name]);
@@ -35,7 +40,7 @@ i=3
     [L1, num1]=bwlabel(objects1);
     
     
-    % ----------------------   objects in image2   ----------------------
+    % ----------------------  get objects in image2   ----------------------
     
     depdir=dir([path 'depth2*.mat']);
     load([path depdir(i).name]);
@@ -54,109 +59,52 @@ i=3
     imdir=dir([path 'rgb_image2_*.png']);
     im2=imread([path imdir(i).name]);
     
-    depdir=dir([path 'depth1_*.mat']);
-    load([path depdir(i).name]);
-    dep1=depth_array;
-    dep1(find(depth_array>2000))=0;
-
-    depdir=dir([path 'depth2_*.mat']);
-    load([path depdir(i).name]);
-    dep2=depth_array;
-    dep2(find(depth_array>2000))=0;
-
+    dep1(find(depth_array>2000))=0;%eliminate too far objects
+    dep2(find(depth_array>2000))=0;%eliminate too far objects
     
+    %get coordinate in a unique reference system
     xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
     xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
     rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
     rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
     
+    %create point cloud
     pc1=pointCloud(xyz1,'Color',reshape(rgbd1,[480*640 3]));
     pc2=pointCloud(xyz21,'Color',reshape(rgbd2,[480*640 3]));
+   
+    %FOR TEST
     %figure(7);
     %showPointCloud(pc1)
-    figure(3);
-    pcshow(pcmerge(pc1,pc2,0.001));
-    drawnow;
+%     figure(3);
+%     pcshow(pcmerge(pc1,pc2,0.001));
+%     drawnow;
     
-pause(0.5);
+%get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L1~=0)    
+obj3d_1=xyz1(find(L1~=0),:);
+obj3d_1 = unique(obj3d_1,'rows');%optimization, remove rows with duplicated values    
 
+%get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L2~=0)    
+obj3d_2=xyz21(find(L2~=0),:);
+obj3d_2 = unique(obj3d_2,'rows');%optimization, remove rows with duplicated values 
 
+obj3d=[obj3d_1; obj3d_2]; %put all points coordinates together
 
-%% TEST
-i=1;
-%for i=1:num1;
-    
-    obj3d_1=xyz1(find(L1~=0),:);
-    obj3d_1 = unique(obj3d_1,'rows');
-%     r=find(obj3d_1(:)==[0 0 0]);
-% obj3d_1(r(1),:)=[];
+%clusterdata() is the perfect function to detect objects but it takes too
+%long! So, let's simplify the problem. We use kmeans() to divided the 3d
+%points in 200 clusters, then we use cluterdata() to group nearest clusters detected through kmeans().
 
-    
-
-  %  hold on;
-   % plot3(obj3d_1(:,1),obj3d_1(:,2),obj3d_1(:,3),'.','MarkerSize',10); hold on;
-    
-%     figure;
-%     imagesc(objects1);
-%     figure;
-% [counts,centre]=hist(obj3d(:,3));
-
-    
-%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
-%     
-%     %plot3(xyz1(:,1),xyz1(:,2),xyz1(:,3),'.','MarkerSize',10); hold on;
-%     plotminbox(corner);
-    hold on;
-    %%
-    
-
-    obj3d_2=xyz21(find(L2~=0),:);
-    obj3d_2 = unique(obj3d_2,'rows');
-   
-
-    %obj3d( ~any(obj3d,2), : ) = [];  %delete 0 value rows
- %   plot3(obj3d_2(:,1),obj3d_2(:,2),obj3d_2(:,3),'.','MarkerSize',10); hold on;
-
-    %plot3(obj3d_2(:,1),obj3d_2(:,2),obj3d_2(:,3),'.','MarkerSize',10); hold on;
-
-%     figure;
-%     imagesc(objects2);
-%     figure;
-%     hist(obj3d(:,3))
-% [npx,centre]=hist(obj3d(:,3));
-% npx(npx<1500)=0; %some filter to remove small 3d objects
-%%
-obj3d=[obj3d_1; obj3d_2];
-%euclidian distance
-
-
-
-%idx=clusterdata(obj3d,3);
-%%
-
-
-group=2000;
+group=200;
 tic;
 [idx,cc]=kmeans(obj3d,group);
 toc;
 group=max(idx);
-% for i=1:group
-%     l=length(find(idx==i));
-%     if l<2000
-%         idx(find(idx==i))=0;
-%     end
-% end
-% group=5;
-% [idx,cc]=kmeans(obj3d,group);
 
-
+%default 8
 distance=8;
 idxcc=clusterdata(cc,distance);
-toc;
 
-%%
-% 
+% go back to the original image and set the right index to the right object
  for w=1:group
      idx(find(idx==w))=idxcc(w)+group;
  end
@@ -164,88 +112,24 @@ idx=idx-group;
 
 for i=1:group
     l=length(find(idx==i));
-    if l<2000
+    if l<100
         idx(find(idx==i))=0;
     end
 end
 
 
-%%
+%
  pcshow(pcmerge(pc1,pc2,0.001));
 for n=1:max(idx)
     hold on;
-    if length(find(idx==n))~=0 
-    plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
-%        [s,corner,s,s]=minboundbox(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'v',1);
-%        plotminbox(corner);
-       fprintf("oooo>");
-    hold on;
+    if length(find(idx==n))~=0  
+        fprintf("printing>");
+        plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+        p=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
+        plot_box(p);
+        hold on;
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-tic;
-distance=0.7;
-[idxcc,b]=cluster_by_eucldist(cc,distance);
-toc;
-% for w=1:b
-%     (idxcc[w])%index of cc
-% for z=1:group
-%     for w=1:b
-%         
-%      idx(find(idx==z))=idxcc(z)+group;%non posso mettere senza group altrimenti si mischiano gli indici
-%  end
- %torno ai numeri normali
-idx=idx-group;
-
-
-
- pcshow(pcmerge(pc1,pc2,0.001));
-
-for n=1:b
-    hold on;
-    if length(find(idx==n))~=0 
-    plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
-%        [s,corner,s,s]=minboundbox(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'v',1);
-%        plotminbox(corner);
-       fprintf("oooo>");
-    hold on;
-    end
+pause(3);
 end
-
-%%
-obj3d=[obj3d_1; obj3d_2];
-
-i=10;
-flag=1;
-while flag==1 && i>1
-    flag=0;
-    [idx,n]=kmeans(obj3d,i);
-    for f=1:i
-        r=find(idx==f);
-        if length(r)<4000
-            idx(idx==f)=0;
-            flag=1;
-        end
-    end
-    i=i-1;
-end
-
-pcshow(pcmerge(pc1,pc2,0.001));
-
-for b=1:(i+1)
-hold on;plot3(obj3d(idx==b,1),obj3d(idx==b,2),obj3d(idx==b,3),'.','MarkerSize',10); hold on;
-end
-
-
-
-  %%  
-%     [s,corner,s,s]=minboundbox(obj3d(:,1),obj3d(:,2),obj3d(:,3));
-%  plotminbox(corner);
-%     hold on;
-%      dep_test2=dep2;
-%      dep_test2(find(L2~=1))=0;
-% %     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);% end
-%     xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
-    
