@@ -3,7 +3,7 @@ clc;
 close all;
 
 load('calib_asus.mat');
-path='maizena3/data_rgb/';
+path='maizena_chocapics/data_rgb/';
 
 bg1=get_bg(path, 'depth1*.mat');
 bg2=get_bg(path, 'depth2*.mat');
@@ -11,11 +11,11 @@ bg2=get_bg(path, 'depth2*.mat');
 
 % -------------------------compute T and R   --------------------------
     
-im1=imread([path 'rgb_image1_3.png']);
-im2=imread([path 'rgb_image2_3.png']);
-load([path 'depth1_3.mat'])
+im1=imread([path 'rgb_image1_1.png']);
+im2=imread([path 'rgb_image2_1.png']);
+load([path 'depth1_1.mat'])
 dep1=depth_array;
-load([path 'depth2_3.mat'])
+load([path 'depth2_1.mat'])
 dep2=depth_array;
 
 tr=rt_computation(im1,dep1,im2,dep2);
@@ -23,8 +23,8 @@ tr=rt_computation(im1,dep1,im2,dep2);
 depdir=dir([path 'depth1*.mat']);
 
 %eliminate bg for all images in dataset
-for i=1:length(depdir)
-%i=7;%problem with 14 (actually no objects),15 (box not recognized),16 (box not recgnized),17
+%for i=1:length(depdir)
+i=2;%problem with 14 (actually no objects),15 (box not recognized),16 (box not recgnized),17
 
     close all;
 
@@ -35,9 +35,10 @@ for i=1:length(depdir)
     depdir=dir([path 'depth1*.mat']);
     load([path depdir(i).name]);
     dep1=depth_array;
-    objects1=remove_bg(dep1,bg1);
-    
-    [L1, num1]=bwlabel(objects1);
+    obj1=remove_bg(dep1, bg1);
+    objects1=bwpropfilt(obj1,'EulerNumber',[-35 1]);%remove region with holes
+    [L1, num1]=bwlabel(objects1,8);
+
     
     
     % ----------------------  get objects in image2   ----------------------
@@ -45,12 +46,10 @@ for i=1:length(depdir)
     depdir=dir([path 'depth2*.mat']);
     load([path depdir(i).name]);
     dep2=depth_array;
-    objects2=remove_bg(dep2,bg2);
-    
-    [L2, num2]=bwlabel(objects2);
+    obj2=remove_bg(dep2,bg2);
+    objects2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove region with holes
+    [L2, num2]=bwlabel(objects2,8);
 
-    
-    
     % ----------------------   point cloud   ---------------------
         
     imdir=dir([path 'rgb_image1_*.png']);
@@ -95,39 +94,50 @@ obj3d=[obj3d_1; obj3d_2]; %put all points coordinates together
 %points in 200 clusters, then we use cluterdata() to group nearest clusters detected through kmeans().
 
 group=200;
-tic;
-[idx,cc]=kmeans(obj3d,group);
-toc;
-group=max(idx);
-
-distance=8; %default 8
-idxcc=clusterdata(cc,distance);
-
-% go back to the original image and set the right index to the right object
- for w=1:group
-     idx(find(idx==w))=idxcc(w)+group;
- end
-idx=idx-group;
-
+if length(obj3d)>group %if there is no objects it won't create cluster
+    tic;
+    [idx,cc]=kmeans(obj3d,group);
+    toc;
+    group=max(idx);
+    
 for w=1:group
-    l=length(find(idx==w));
-    if l<2000
-        idx(find(idx==w))=0;
-    end
+        l=length(find(idx==w));
+        if l<30
+            idx(find(idx==w))=0;
+        end
 end
 
-%print image pointcloud, print objects inside boxes
- pcshow(pcmerge(pc1,pc2,0.001));
-for n=1:max(idx)
-    hold on;
-    if length(find(idx==n))~=0  
-        fprintf("printing>");
-        plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
-        p=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
-        plot_box(p);
+    
+    distance=8; %default 8
+    idxcc=clusterdata(cc,distance);
+
+    % go back to the original image and set the right index to the right object
+     for w=1:group
+         idx(find(idx==w))=idxcc(w)+group;
+     end
+    idx=idx-group;
+
+% obj3d(idx==0,:)=[];
+%     tic;
+%     [idx,cc]=kmeans(obj3d,max(num1,num2));
+%     toc;
+%     group=max(idx);
+
+    %print image pointcloud, print objects inside boxes
+     pcshow(pcmerge(pc1,pc2,0.001));
+    for n=1:max(idx)
         hold on;
+        if length(find(idx==n))~=0  
+            fprintf("printing>");
+            plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+            p=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
+            plot_box(p);
+            hold on;
+        end
     end
+    pause(5);
+else 
+    fprintf('\n no objects detected in the scene\n');
 end
 
-pause(5);
-end
+%end
