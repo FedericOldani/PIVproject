@@ -3,7 +3,7 @@ clc;
 close all;
 
 load('calib_asus.mat');
-path='stillnature/data_rgb/';
+path='maizena3/data_rgb/';
 
 bg1=get_bg(path, 'depth1*.mat');
 bg2=get_bg(path, 'depth2*.mat');
@@ -23,8 +23,8 @@ tr=rt_computation(im1,dep1,im2,dep2);
 depdir=dir([path 'depth1*.mat']);
 
 %eliminate bg for all images in dataset
-%for i=1:length(depdir)
-i=16;%problem with 14 (actually no objects),15 (box not recognized),16 (box not recgnized),17
+for i=1:length(depdir)
+%i=2; 
 
     close all;
 
@@ -36,7 +36,7 @@ i=16;%problem with 14 (actually no objects),15 (box not recognized),16 (box not 
     load([path depdir(i).name]);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
-    objects1=bwpropfilt(obj1,'EulerNumber',[-35 1]);%remove region with holes
+    objects1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove region with holes
     [L1, num1]=bwlabel(objects1,8);
 
     
@@ -58,8 +58,8 @@ i=16;%problem with 14 (actually no objects),15 (box not recognized),16 (box not 
     imdir=dir([path 'rgb_image2_*.png']);
     im2=imread([path imdir(i).name]);
     
-    dep1(find(dep1>2000))=0;%eliminate too far objects
-    dep2(find(dep2>2000))=0;%eliminate too far objects
+    dep1(find(dep1>2500))=0;%eliminate too far objects
+    dep2(find(dep2>2500))=0;%eliminate too far objects
     
     %get coordinate in a unique reference system
     xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
@@ -72,6 +72,14 @@ i=16;%problem with 14 (actually no objects),15 (box not recognized),16 (box not 
     pc1=pointCloud(xyz1,'Color',reshape(rgbd1,[480*640 3]));
     pc2=pointCloud(xyz21,'Color',reshape(rgbd2,[480*640 3]));
    
+    
+    
+    
+    
+    
+    
+    
+    
     %FOR TEST
     %figure(7);
     %showPointCloud(pc1)
@@ -81,41 +89,86 @@ i=16;%problem with 14 (actually no objects),15 (box not recognized),16 (box not 
     
 %get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L1~=0)    
 obj3d_1=xyz1(find(L1~=0),:);
+obj3d_1(obj3d_1(:,3)>2,:)=[];
 obj3d_1 = unique(obj3d_1,'rows');%optimization, remove rows with duplicated values    
 
 %get objects coordinate: pick points coordinate only where bwlabel() detected an objects (=> L2~=0)    
 obj3d_2=xyz21(find(L2~=0),:);
+obj3d_2(obj3d_2(:,3)>2,:)=[];
 obj3d_2 = unique(obj3d_2,'rows');%optimization, remove rows with duplicated values 
 
 obj3d=[obj3d_1; obj3d_2]; %put all points coordinates together
 
-%clusterdata() is the perfect function to detect objects but it takes too
+ %clusterdata() is the perfect function to detect objects but it takes too
 %long! So, let's simplify the problem. We use kmeans() to divided the 3d
 %points in 200 clusters, then we use cluterdata() to group nearest clusters detected through kmeans().
 
-group=200;
-if length(obj3d)>group %if there is no objects it won't create cluster
-    tic;
-    [idx,cc]=kmeans(obj3d,group);
-    toc;
-    group=max(idx);
-    
-for w=1:group
-        l=length(find(idx==w));
-        if l<30
-            idx(find(idx==w))=0;
-        end
+%%
+
+[kn,D] = knnsearch(obj3d,obj3d,'k',10);%default 10
+
+
+
+
+mat=sparse(zeros(length(kn)));
+
+for h=1:length(kn)
+    for hh=1:length(kn(h))
+        mat(h,kn(h,hh))=D(h,hh);
+    end
 end
+g=graph(mat);
 
-    
-    distance=15; %default 8
-    idxcc=clusterdata(cc,distance);
+idxtree=minspantree(g,'Method','sparse');
 
-    % go back to the original image and set the right index to the right object
-     for w=1:group
-         idx(find(idx==w))=idxcc(w)+group;
-     end
-    idx=idx-group;
+%%
+        
+% idxtree=minspantree(graph,'Method','sparse');
+
+% idx=zeros(length(idxtree),1);
+% c=1;
+% for h=1:length(idxtree)
+%     if idx(h)==0
+%         idx(h)=c;
+%         c=c+1;
+%         
+
+
+%%
+
+
+
+% 
+% group=round(length(obj3d)/10);
+% %if length(obj3d)>group %if there is no objects it won't create cluster
+%     tic;
+%     [idx,cc]=kmeans(obj3d,group);
+%     toc;
+%     group=max(idx);
+%     
+% for w=1:group
+%         l=length(find(idx==w));
+%         if l<group/300
+%             idx(find(idx==w))=0;
+%         end
+% end
+% 
+%    
+%     distance=10; %default 12
+%     idxcc=clusterdata(cc,distance);
+% 
+%     % go back to the original image and set the right index to the right object
+%      for w=1:group
+%          idx(find(idx==w))=idxcc(w)+100000;
+%      end
+%     idx=idx-100000;
+%     
+%  for w=1:group
+%         l=length(find(idx==w));
+%         if l<500
+%             idx(find(idx==w))=0;
+%         end
+% end
 
 % obj3d(idx==0,:)=[];
 %     tic;
@@ -124,6 +177,9 @@ end
 %     group=max(idx);
 
     %print image pointcloud, print objects inside boxes
+
+   %%
+   
      pcshow(pcmerge(pc1,pc2,0.001));
     for n=1:max(idx)
         hold on;
@@ -135,9 +191,9 @@ end
             hold on;
         end
     end
-    pause(5);
-else 
-    fprintf('\n no objects detected in the scene\n');
-end
+    pause(4);
+%  else 
+%      fprintf('\n no objects detected in the scene\n');
+%  end
 
-%end
+end
