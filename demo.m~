@@ -1,0 +1,48 @@
+clear;
+clc;
+close all;
+
+path='maizena4/data_rgb/';
+
+%depth path
+depdir1=dir([path 'depth1*.mat']);
+imdir1=dir([path 'rgb_image1_*']);
+
+depdir2=dir([path 'depth2*.mat']);
+imdir2=dir([path 'rgb_image2_*']);
+
+for i=1:length(depdir1)
+    
+    d=[path depdir1(i).name];
+    im=[path 'rgb_image1_*'];
+    
+    imgseq1(i).depth=d;
+    imgseq1(i).rgb=im;
+    
+    d=[path depdir2(i).name];
+    im=[path 'rgb_image1_*'];
+    
+    imgseq1(i).rgb=im;
+    imgseq2(i).depth=d;
+end
+
+cam_params=load('calib_asus.mat');
+
+%compute T and R
+
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
+load([path 'depth1_01.mat'])
+dep1=depth_array;
+load([path 'depth2_01.mat'])
+dep2=depth_array;
+tr=rt_computation(im1,dep1,im2,dep2);
+
+cam1toW=struct('R',eye(3),'T',zeros(3,1));
+cam2toW=struct('R',tr.T,'T',tr.c);%tr.c is the rotation matrix, %tr.c is the translation
+
+%objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
+
+
+
+

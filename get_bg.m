@@ -1,19 +1,16 @@
-function bg=get_bg(path, depth_set )
+function bg=get_bg(path)
 %path
 %depth set - depth set, e.g. dir([path 'depth1*.mat']);
 
-
-d=dir([path depth_set]);
-imgmed=zeros(480,640,length(d));
+imgmed=zeros(480,640,length(path));
 
 %collect pixel value from all images in dataset
-for i=1:length(d)
-    load([path d(i).name]);
+for i=1:length(path)
+    load(path(i).depth);
     %figure(4);
     %imagesc(depth_array);
     imgmed(:,:,i)=double(depth_array)/1000;
 end
-
 %compute the median
 bg=median(imgmed,3);
 
