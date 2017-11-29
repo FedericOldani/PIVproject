@@ -15,7 +15,7 @@ for i=1:length(imgseq1)
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
-    %objects1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove region with holes
+    obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove region with holes
     [L1, num1]=bwlabel(obj1,8);
     
     
@@ -25,7 +25,7 @@ for i=1:length(imgseq1)
     load(imgseq2(i).depth);
     dep2=depth_array;
     obj2=remove_bg(dep2,bg2);
-    %objects2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove region with holes
+    obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove region with holes
     [L2, num2]=bwlabel(obj2,8);
     
     % ----------------------   point cloud   ---------------------
@@ -56,7 +56,7 @@ for i=1:length(imgseq1)
    % 3.build a graph (different objects are not connected)
    % 4.each separate subgraph represent an object
     
-    [kn,D] = knnsearch(obj3d,obj3d,'k',15);%default 10
+    [kn,D] = knnsearch(obj3d,obj3d,'k',20);%default 10
     
     idx=0;
     if ~isempty(kn)

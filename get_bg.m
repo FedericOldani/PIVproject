@@ -14,3 +14,6 @@ end
 %compute the median
 bg=median(imgmed,3);
 
+load(path(1).depth);
+bg=double(depth_array)/1000;
+
