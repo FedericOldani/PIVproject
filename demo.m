@@ -33,6 +33,7 @@ cam_params.R=R_d_to_rgb;
 cam_params.T=T_d_to_rgb;
 %compute T and R
 
+
 im1=imread([path 'rgb_image1_01.png']);
 im2=imread([path 'rgb_image2_01.png']);
 load([path 'depth1_01.mat'])
