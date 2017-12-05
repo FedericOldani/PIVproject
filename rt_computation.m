@@ -14,7 +14,7 @@ function tr=rt_computation(im1, depth1, im2, depth2)
     x1=zeros(np,1); y1=x1; x2=y1; y2=x1;
     
     
-     %values for stillnature
+     %values for stillnature1
 %     x2=[301 324 296 301 100 405];
 %     y2=[239 143 175 221 317 190];
 %     x1=[281 306 301 289 158 305];
@@ -40,6 +40,12 @@ function tr=rt_computation(im1, depth1, im2, depth2)
     y1=[306 303 211 204 218 243];
     x2=[169 277 174 286 383 358];
     y2=[193 185 68 71 108 133];
+    
+        %values for corredor WRONG!!!
+%     x1=[446 485 521 497 479 539];
+%     y1=[424 287 293 271 324 339];
+%     x2=[364 337 299 318 329 252];
+%     y2=[196 292 287 323 411 394];
 
     ind1=sub2ind(size(depth1),y1,x1);
     ind2=sub2ind(size(depth2),y2,x2);

@@ -1,25 +1,24 @@
-%function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
+function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 bg1=get_bg(imgseq1);
 bg2=get_bg(imgseq2);
 
-objects=struct('X',{},'Y',{},'Z',{},'frames_tracked',{});
-obj=struct('hue1',{},'sat1',{});
+new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
+objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 
 
 %eliminate bg for all images in dataset
 
 
- for i=1:length(imgseq1)
-%    i=5;
+for i=1:length(imgseq1)
+%       i=1; 
     
-obj={};
-
-
+    
+    
     close all;
     fprintf('\n%d...',i);
     % ----------------------  get objects in image1   ----------------------
-
+    
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
@@ -36,7 +35,7 @@ obj={};
     obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove regions with many holes
     [L2, num2]=bwlabel(obj2,8);
     
-       
+    
     im1=imread(imgseq1(i).rgb);
     im2=imread(imgseq2(i).rgb);
     
@@ -68,7 +67,7 @@ obj={};
     sat2=sat(L2~=0);
     
     
-%
+    %
     
     
     obj3d_1=getObj3d(xyz1,L1);
@@ -88,14 +87,14 @@ obj={};
     hue=[hue1;hue2];
     sat=[sat1;sat2];
     %
-   
-   % ------------------------ search objects in 3d ------------------------
-   
-   % 1.knn search to search for nearest neighbour of each point
-   % 2.load a sparse distance matrix with values found (only if distane is
-   %    below a certain limit)
-   % 3.build a graph (different objects are not connected)
-   % 4.each separate subgraph represent an object
+    
+    % ------------------------ search objects in 3d ------------------------
+    
+    % 1.knn search to search for nearest neighbour of each point
+    % 2.load a sparse distance matrix with values found (only if distane is
+    %    below a certain limit)
+    % 3.build a graph (different objects are not connected)
+    % 4.each separate subgraph represent an object
     
     [kn,D] = knnsearch(obj3d,obj3d,'k',20);%default 10
     
@@ -110,120 +109,179 @@ obj={};
         idx=bins;
     end
     
-
-    j=0;%index to save 'obj'
-    pcshow(pcmerge(pc1,pc2,0.001));
+    
+    j=0;%index to save 'new_obj'
+    %pcshow(pcmerge(pc1,pc2,0.001));
     for n=1:max(idx)
- 
-        hold on;
-        if length(find(idx==n))>1000       
+        
+        %hold on;
+        if length(find(idx==n))>1000
             j=j+1;
             fprintf("printing>");
-            figure(1);
-            plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+            %plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
             box=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
-            plot_box(box);    
-            hold on;
+            %plot_box(box);
+            %hold on;
             
-            new_obj.X(1,:)=box(:,1)';
-            new_obj.Y(1,:)=box(:,2)';
-            new_obj.Z(1,:)=box(:,3)';
-           
-            obj(j).hue1=mean(hue(idx==n));
-            obj(j).sat1=mean(sat(idx==n));
-
-            flag=0;
-            if ~isempty(objects) && i~=1
-                th_hue=0.08;
-                th_sat=0.05;
-                
-                fprintf('qui ');
-                
-                y=1;
-                while y<=number_obj_prev && flag==0
-                                      
-                    if ~isempty(obj_prev(y).hue1)
-                        abs_hue1(y)=abs(obj(j).hue1-obj_prev(y).hue1);
-                        abs_sat1(y)=abs(obj(j).sat1-obj_prev(y).sat1);
-                        
-                       fprintf('\nHUE:compare %d with %d: %f  -  %f',j,obj_prev(y).index,abs_hue1(y),obj_prev(y).hue1);
-                       fprintf('\nSAT:compare %d with %d: %f  -  %f',j,obj_prev(y).index,abs_sat1(y),obj_prev(y).sat1);
-%                         figure(3);
-%                         histogram(obj_prev(y).hue1);
-                        %
-                    end
-                    y=y+1
-                end
-                
-                   if exist('abs_hue1')
-                    distance=sqrt(abs_hue1.^2+abs_sat1.^2);
-                    [~, y]=min(distance);
-                    min_abs_hue=abs_hue1(y);
-                    min_abs_sat=abs_sat1(y);
-                    
-                        if min_abs_hue<th_hue && min_abs_sat<th_sat
-                            objects(obj_prev(y).index).frames_tracked(end+1)= i;
-                            objects(obj_prev(y).index).X(end+1,:)=new_obj.X(1,:);
-                            objects(obj_prev(y).index).Y(end+1,:)=new_obj.Y(1,:);
-                            objects(obj_prev(y).index).Z(end+1,:)=new_obj.Z(1,:);
-                            flag=1;
-                            tag=obj_prev(y).index;
-                            obj(j).index=obj_prev(y).index;
-                        end          
-                   end
-             clear abs_hue1;
-             clear abs_sat1;
-                   
-%                 for y=1:length(objects)
-%                     fr=objects(y).frames_tracked;
-%                     for z=1:length(fr)
-%                         if fr(z)==i-1
-%                             differenceX=abs(objects(y).X(z,:)-new_obj.X(1,:)).^2;
-%                             differenceY=abs(objects(y).Y(z,:)-new_obj.Y(1,:)).^2;
-%                             differenceZ=abs(objects(y).Z(z,:)-new_obj.Z(1,:)).^2;
-%                             difference=sqrt(differenceX+differenceY+differenceZ);
-%                             if sum(difference<threshold)==8
-%                                 objects(y).frames_tracked(end+1)= i;
-%                                 objects(y).X(end+1,:)=new_obj.X(1,:);
-%                                 objects(y).Y(end+1,:)=new_obj.Y(1,:);
-%                                 objects(y).Z(end+1,:)=new_obj.Z(1,:);
-%                                 flag=1;
-%                                 tag=y;
-%                             end
-%                         end
+            new_obj(j).X(1,:)=box(:,1)';
+            new_obj(j).Y(1,:)=box(:,2)';
+            new_obj(j).Z(1,:)=box(:,3)';            
+            new_obj(j).hue=mean(hue(idx==n));
+            new_obj(j).sat=mean(sat(idx==n));
+            
+%{             flag=0;
+%             if ~isempty(objects) && i~=1
+%                 th_hue=0.08;
+%                 th_sat=0.02;
+%                 
+%                 y=1;
+%                 while y<=number_obj_prev && flag==0                   
+%                     if ~isempty(obj_prev(y).hue1)
+%                         abs_distance_matrix(j,y,1)=abs(obj(j).hue1-obj_prev(y).hue1);
+%                         abs_distance_matrix(j,y,2)=abs(obj(j).sat1-obj_prev(y).sat1);
+%                                                 fprintf('\nHUE:compare %d with %d: %f  -  %f',j,obj_prev(y).index,abs_hue1(y),obj_prev(y).hue1);
+%                                                fprintf('\nSAT:compare %d with %d: %f  -  %f',j,obj_prev(y).index,abs_sat1(y),obj_prev(y).sat1);
+%                         
+%                     else
+%                         abs_distance_matrix(j,y,1)=inf;
+%                         abs_distance_matrix(j,y,2)=inf; 
+%                     end
+%                     y=y+1;
+%                 end
+% 
+% 
+%                 
+%                 if exist('abs_hue1')
+%                     distance=sqrt(abs_hue1.^2+abs_sat1.^2);
+%                     [~, y]=min(distance);
+%                     min_abs_hue=abs_hue1(y);
+%                     min_abs_sat=abs_sat1(y);
+%                     
+%                     if min_abs_hue<th_hue && min_abs_sat<th_sat
+%                         objects(obj_prev(y).index).frames_tracked(end+1)= i;
+%                         objects(obj_prev(y).index).X(end+1,:)=new_obj.X(1,:);
+%                         objects(obj_prev(y).index).Y(end+1,:)=new_obj.Y(1,:);
+%                         objects(obj_prev(y).index).Z(end+1,:)=new_obj.Z(1,:);
+%                         flag=1;
+%                         tag=obj_prev(y).index;
+%                         obj(j).index=obj_prev(y).index;
 %                     end
 %                 end
-            end
-            
-            if flag==0
-                new_obj.frames_tracked(1)= i;
-                objects(end+1)=new_obj;
-                tag=length(objects);
-                obj(j).index=length(objects);
-            end
-            
-            txt=['object' int2str(tag)];
-            text(box(1,1),box(1,2),box(1,3),txt);
-            
+%                 clear abs_hue1;
+%                 clear abs_sat1;
+%                 
+% 
+% 
+% 
+% 
+% 
+%                                 for y=1:length(objects)
+%                                     fr=objects(y).frames_tracked;
+%                                     for z=1:length(fr)
+%                                         if fr(z)==i-1
+%                                             differenceX=abs(objects(y).X(z,:)-new_obj.X(1,:)).^2;
+%                                             differenceY=abs(objects(y).Y(z,:)-new_obj.Y(1,:)).^2;
+%                                             differenceZ=abs(objects(y).Z(z,:)-new_obj.Z(1,:)).^2;
+%                                             difference=sqrt(differenceX+differenceY+differenceZ);
+%                                             if sum(difference<threshold)==8
+%                                                 objects(y).frames_tracked(end+1)= i;
+%                                                 objects(y).X(end+1,:)=new_obj.X(1,:);
+%                                                 objects(y).Y(end+1,:)=new_obj.Y(1,:);
+%                                                 objects(y).Z(end+1,:)=new_obj.Z(1,:);
+%                                                 flag=1;
+%                                                 tag=y;
+%                                             end
+%                                         end
+%                                     end
+%                                 end
+%             end
+%             
+%             if flag==0
+%                 new_obj.frames_tracked(1)= i;
+%                 objects(end+1)=new_obj;
+%                 tag=length(objects);
+%                 obj(j).index=length(objects);
+%             end
+%             
+%             txt=['object' int2str(tag)];
+%             text(box(1,1),box(1,2),box(1,3),txt);
+%}            
             
         else
-            box(:,:,n)=zeros(8,3); 
+            box(:,:,n)=zeros(8,3);
         end
         
         
     end
     
-    clear box;
-    pause(4);
-    number_obj_prev=j;
-
-    clear obj_prev;
-    obj_prev=obj;
-    clear obj;
-    
-idx_prev=idx;
-
+    if ~isempty(new_obj)
         
+        if ~isempty(objects) && i~=1
+            th_hue=0.08;
+            th_sat=0.05;
+            
+            abs_distance_matrix=ones(j,number_obj_prev)*inf;
+            
+            for q=1:j
+                for y=1:number_obj_prev
+                    hue(q,y)=abs(new_obj(q).hue-old_obj(y).hue);
+                    sat(q,y)=abs(new_obj(q).sat-old_obj(y).sat);
+                    abs_distance_matrix(q,y)=sqrt(hue(q,y)^2+sat(q,y)^2);
+                end
+            end
+            
+            more=1;
+            while more==1
+                more=0;
+                
+                [~,index]=min(abs_distance_matrix(:));
+                [q,y]=ind2sub(size(abs_distance_matrix),index);
+                
+                if hue(q,y)<th_hue && sat(q,y)<th_sat && abs_distance_matrix(q,y)~=inf
+                    objects(old_obj(y).index).frames_tracked(end+1)= i;
+                    objects(old_obj(y).index).X(end+1,:)=new_obj(q).X(1,:);
+                    objects(old_obj(y).index).Y(end+1,:)=new_obj(q).Y(1,:);
+                    objects(old_obj(y).index).Z(end+1,:)=new_obj(q).Z(1,:);
+                    new_obj(q).index=old_obj(y).index;
+                    tag=old_obj(y).index;
+                    txt=['object' int2str(tag)];
+                    text(new_obj(q).X(1),new_obj(q).Y(1),new_obj(q).Z(1),txt);
+                    
+                    abs_distance_matrix(:,y)=inf;
+                    abs_distance_matrix(q,:)=inf;
+                    more=1;
+                    
+                    vector_old_obj=[vector_old_obj q];
+                end
+            end
+        end
+        
+        idx_new_obj=setdiff(1:j,vector_old_obj);
+        %     [idx_new_obj,~]=find(abs_distance_matrix~=inf);
+        %     idx_new_obj=unique(idx_new_obj,'rows');
+        
+        for p=1:length(idx_new_obj)
+            r=idx_new_obj(p);
+            objects(end+1).frames_tracked(1)= i;
+            objects(end).X=new_obj(r).X;
+            objects(end).Y=new_obj(r).Y;
+            objects(end).Z=new_obj(r).Z;
+            tag=length(objects);
+            new_obj(r).index=length(objects);
+            txt=['object' int2str(tag)];
+            text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
+        end
+        
+        %pause(4);
+        
+        number_obj_prev=j;
+        clear old_obj;
+        old_obj=new_obj;
+        clear new_obj;
+        
+    end
+    
+    vector_old_obj=[];
 end
 
 
