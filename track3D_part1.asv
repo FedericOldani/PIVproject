@@ -5,9 +5,7 @@ farAwayObjects = 2000; %2 meters
 objPixelSize = 900; %more than 900 pixels
 cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
-nearPoints = 50; %nearest X points to some point; professor said 10
-accept3dPoints = 1000; %accept objects > 1000 3d points
-waitSeconds = 7; %See the image for 7 seconds
+
 
 
 bg1=get_bg(imgseq1);
