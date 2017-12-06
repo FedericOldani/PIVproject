@@ -1,9 +1,8 @@
-function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
+%function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 bg1=get_bg(imgseq1);
 bg2=get_bg(imgseq2);
 
-new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
 objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 
 
@@ -13,7 +12,7 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 for i=1:length(imgseq1)
 %       i=1; 
     
-    
+    new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
     
     close all;
     fprintf('\n%d...',i);
@@ -22,10 +21,9 @@ for i=1:length(imgseq1)
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
-    obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes
+    obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
     [L1, num1]=bwlabel(obj1,8);
-    
-    
+
     
     % ----------------------  get objects in image2   ----------------------
     
@@ -111,17 +109,17 @@ for i=1:length(imgseq1)
     
     
     j=0;%index to save 'new_obj'
-    %pcshow(pcmerge(pc1,pc2,0.001));
+    pcshow(pcmerge(pc1,pc2,0.001));
     for n=1:max(idx)
         
-        %hold on;
+        hold on;
         if length(find(idx==n))>1000
             j=j+1;
             fprintf("printing>");
-            %plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+            plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
             box=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
-            %plot_box(box);
-            %hold on;
+            plot_box(box);
+            hold on;
             
             new_obj(j).X(1,:)=box(:,1)';
             new_obj(j).Y(1,:)=box(:,2)';
@@ -272,7 +270,7 @@ for i=1:length(imgseq1)
             text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
         end
         
-        %pause(4);
+        pause(4);
         
         number_obj_prev=j;
         clear old_obj;
