@@ -5,14 +5,13 @@ farAwayObjects = 2000; %2 meters
 objPixelSize = 900; %more than 900 pixels
 cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
-nearPoints = 50; %nearest X points to some point; professor said 10
-accept3dPoints = 1000; %accept objects > 1000 3d points
-waitSeconds = 7; %See the image for 7 seconds
+
 
 
 bg1=get_bg(imgseq1);
 bg2=get_bg(imgseq2);
 
+new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
 objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 
 
@@ -22,7 +21,7 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 for i=1:length(imgseq1)
 %       i=1; 
     
-    new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
+    
     
     close all;
     fprintf('\n%d...',i);
@@ -31,9 +30,10 @@ for i=1:length(imgseq1)
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
-    obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
+    obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes
     [L1, num1]=bwlabel(obj1,8);
-
+    
+    
     
     % ----------------------  get objects in image2   ----------------------
     
@@ -120,11 +120,10 @@ for i=1:length(imgseq1)
     
     j=0;%index to save 'new_obj'
     pcshow(pcmerge(pc1,pc2,0.001));
-
     for n=1:max(idx) %num of objects
         
         hold on;
-        if length(find(idx==n))>accept3dPoints %more than 1000 3d points
+        if length(find(idx==n))>1000 %more than 1000 3d points
             j=j+1;
             fprintf("printing>");
             plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
@@ -280,9 +279,9 @@ for i=1:length(imgseq1)
             txt=['object' int2str(tag)];
             text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
         end
-
+        
         pause(7); %seconds to see the image
-
+        
         number_obj_prev=j;
         clear old_obj;
         old_obj=new_obj;
