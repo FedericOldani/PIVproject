@@ -1,7 +1,7 @@
 %function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObjects = 2000; %2 meters
+farAwayObj = 2000; %2 meters
 objPixelSize = 900; %more than 900 pixels
 cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
@@ -32,6 +32,7 @@ for i=1:length(imgseq1)
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1);
     %obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
+  
     [L1, num1]=bwlabel(obj1,8);
     
      se = strel('disk',10);
@@ -42,8 +43,10 @@ for i=1:length(imgseq1)
     
     load(imgseq2(i).depth);
     dep2=depth_array;
+
     obj2=remove_bg(dep2,bg2);
     %obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove regions with many holes
+
     [L2, num2]=bwlabel(obj2,8);
     
      L2=imopen(L2,se);
@@ -52,8 +55,8 @@ for i=1:length(imgseq1)
     im2=imread(imgseq2(i).rgb);
     
     
-    dep1(find(dep1>2000))=0;%eliminate too far objects 2 meters
-    dep2(find(dep2>2000))=0;%eliminate too far objects
+    dep1(find(dep1>farAwayObj))=0;%eliminate too far objects 2 meters
+    dep2(find(dep2>farAwayObj))=0;%eliminate too far objects
     
     %get coordinate in a unique reference system
     [xyz1,rgbd1]=getCoordinate(dep1,im1,cam1toW,cam_params);
@@ -108,7 +111,9 @@ for i=1:length(imgseq1)
     % 3.build a graph (different objects are not connected)
     % 4.each separate subgraph represent an object
     
-    [kn,D] = knnsearch(obj3d(:,:),obj3d(:,:),'k',50);%default 10; more than 50 points together
+
+    [kn,D] = knnsearch(obj3d,obj3d,'k',nearPoints);%default 10; more than 50 points together
+
     
     idx=0;
     if ~isempty(kn)
@@ -285,7 +290,7 @@ for i=1:length(imgseq1)
             text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
         end
 
-        pause(7); %seconds to see the image
+        pause(waitSeconds); %seconds to see the image
 
         number_obj_prev=j;
         clear old_obj;
