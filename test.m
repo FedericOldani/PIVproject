@@ -3,12 +3,12 @@ clear; clc; close all;
 load('calib_asus.mat');
 path='maizena3/data_rgb/';
     
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
 
-load([path 'depth1_1.mat'])
+load([path 'depth1_01.mat'])
 dep1=depth_array;
-load([path 'depth2_1.mat'])
+load([path 'depth2_01.mat'])
 dep2=depth_array;
 
 
@@ -17,7 +17,7 @@ dep2=depth_array;
 figure(1);
 image(im1);
 im1 = single(rgb2gray(im1));
-[f,d] = vl_sift(im1,'edgethresh',10,'PeakThresh',5);
+[f,d] = vl_sift(im1,'edgethresh',30,'PeakThresh',0);
 
 perm = randperm(size(f,2));
 sel = perm(1:50);
@@ -35,7 +35,7 @@ set(h3,'color','g');
 figure(2);
 image(im2);
 im2 = single(rgb2gray(im2));
-[f,d] = vl_sift(im2,'edgethresh',10,'PeakThresh',5);
+[f,d] = vl_sift(im2,'edgethresh',30,'PeakThresh',0);
 
 perm = randperm(size(f,2));
 sel = perm(1:50);
@@ -50,16 +50,16 @@ set(h3,'color','g');
 
 %-----------------------Matching images
 
-[fa, da] = vl_sift(im1,'edgethresh',10,'PeakThresh',5);
-[fb, db] = vl_sift(im2,'edgethresh',10,'PeakThresh',5);
+[fa, da] = vl_sift(im1,'edgethresh',30,'PeakThresh',0);
+[fb, db] = vl_sift(im2,'edgethresh',30,'PeakThresh',0);
 [matches, scores] = vl_ubcmatch(da, db);
 
 
 %------------------------Plot common points
 
 clear im1 im2;
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
 figure(3); image(cat(2, im1, im2));
 
 xa = fa(1,matches(1,:));
@@ -78,21 +78,56 @@ fbaux(1,:) = fb(1,:) + size(im1,2);
 vl_plotframe(fbaux(:,matches(2,:)));
 axis image off;
 
- 
-%---------------------Point Clouds
 
-clear im1 im2;
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+%%
+%%--------------------Testing
+
+clear; 
+
+load('calib_asus.mat');
+path='maizena3/data_rgb/';
+    
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
+
+load([path 'depth1_01.mat'])
+dep1=depth_array;
+load([path 'depth2_01.mat'])
+dep2=depth_array;
+
+
+%--------------------Matching with rgbd
 
 dep1(find(dep1>2000))=0; dep2(find(dep2>2000))=0; %eliminate objects that are too far away
-
 xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
 xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
-
 rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
 rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
+rgbd1aux = single(rgb2gray(rgbd1));
+rgbd2aux = single(rgb2gray(rgbd2));
+[fa, da] = vl_sift(rgbd1aux,'edgethresh',30,'PeakThresh',0);
+[fb, db] = vl_sift(rgbd2aux,'edgethresh',30,'PeakThresh',0);
+[matches, scores] = vl_ubcmatch(da, db);
+xa = fa(1,matches(1,:));
+xb = fb(1,matches(2,:));
+ya = fa(2,matches(1,:));
+yb = fb(2,matches(2,:));
 
+
+%---------------------Point Clouds
+
+% clear im1 im2 xyz1 xyz2 rgbd1 rgbd2;
+% im1=imread([path 'rgb_image1_1.png']);
+% im2=imread([path 'rgb_image2_1.png']);
+% 
+% dep1(find(dep1>2000))=0; dep2(find(dep2>2000))=0; %eliminate objects that are too far away
+% 
+% xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
+% xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
+% 
+% rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
+% rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
+% 
 pc1=pointCloud(xyz1,'Color',reshape(rgbd1,[480*640 3]));
 pc2=pointCloud(xyz2,'Color',reshape(rgbd2,[480*640 3]));
 
@@ -102,8 +137,8 @@ figure(5);clf; showPointCloud(pc2);
 
 %-------------------------RANSAC
 
-errorthresh=0.10;
-niter=100;
+errorthresh=0.1;
+niter=200;
 numinliers=[];
 R=[];
 T=[];
@@ -133,7 +168,7 @@ for i=1:niter-4,
 
     erro=P1-P2*tr.T-ones(length(P2),1)*tr.c(1,:);
     
-    numinliers=[numinliers length(find(sum(erro.*erro,2)<errorthresh^2))];
+    numinliers=[numinliers length(find(sum(erro.*erro,2)<errorthresh^2))];  %Computing the norm2
 end
 
 [mm,ind]=max(numinliers);
@@ -141,14 +176,13 @@ end
 R=R(:,(ind-1)*3+1:(ind-1)*3+3);
 T=T(1,(ind-1)*3+1:(ind-1)*3+3);
 
-%erro=P1-P2*tr.T-ones(length(P2),1)*tr.c(1,:);
 erro=P1-P2*R-ones(length(P2),1)*T;
-inds=find(sum(erro.*erro,2)<errorthresh^2);
+inds=find(sum(erro.*erro,2)<errorthresh^2); %Find the indexes of the inliers
 
-P1=P1(inds,:);
+P1=P1(inds,:);  %Fetch the inliers 
 P2=P2(inds,:);
 
-[d,xx,tr]=procrustes(P1,P2,'scaling',false,'reflection',false);
+[d,xx,tr]=procrustes(P1,P2,'scaling',false,'reflection',false); %Use yhose inliers to compute the final transformation
 
 xyz21=xyz2*tr.T+ones(length(xyz2),1)*tr.c(1,:);
 pc2=pointCloud(xyz21,'Color',reshape(rgbd2,[480*640 3]));
