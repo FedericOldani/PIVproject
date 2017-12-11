@@ -1,14 +1,17 @@
 %function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObj = 2000; %2 meters
-objPixelSize = 900; %more than 900 pixels
+farAwayObj = 4000; %2 meters
+objPixelSize = 2000; %more than 900 pixels
 cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
 nearPoints = 50; %nearest X points to some point; professor said 10
 accept3dPoints = 1000; %accept objects > 1000 3d points
-waitSeconds = 7; %See the image for 7 seconds
+waitSeconds = 4; %See the image for 7 seconds
 
+bgdist=0.2;
+faraway=4000;
+objsize=1000;
 
 bg1=get_bg(imgseq1);
 bg2=get_bg(imgseq2);
@@ -23,20 +26,19 @@ for i=1:length(imgseq1)
 %       i=1; 
     
     new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'hue1',{},'sat1',{});
-    
     close all;
     fprintf('\n%d...',i);
     % ----------------------  get objects in image1   ----------------------
     
     load(imgseq1(i).depth);
     dep1=depth_array;
-    obj1=remove_bg(dep1, bg1);
+    obj1=remove_bg(dep1, bg1, bgdist, faraway, objsize);
     %obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
   
     [L1, num1]=bwlabel(obj1,8);
     
-     se = strel('disk',10);
-     L1=imopen(L1,se);
+%      se = strel('disk',10);
+%      L1=imopen(L1,se);
 
     
     % ----------------------  get objects in image2   ----------------------
@@ -44,12 +46,12 @@ for i=1:length(imgseq1)
     load(imgseq2(i).depth);
     dep2=depth_array;
 
-    obj2=remove_bg(dep2,bg2);
+    obj2=remove_bg(dep2,bg2, bgdist, faraway, objsize);
     %obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove regions with many holes
 
     [L2, num2]=bwlabel(obj2,8);
     
-     L2=imopen(L2,se);
+%      L2=imopen(L2,se);
     
     im1=imread(imgseq1(i).rgb);
     im2=imread(imgseq2(i).rgb);
@@ -121,7 +123,7 @@ for i=1:length(imgseq1)
         for h=2:length(kn(1,:))
             DG=DG+sparse(kn(:,1),kn(:,h),D(:,h)<0.1,length(kn(:,1)),length(kn(:,1))); %up to 15cm
         end
-        G=graph(DG,'upper');
+        G=graph(DG,'lower');
         bins = conncomp(G);
         idx=bins;
     end

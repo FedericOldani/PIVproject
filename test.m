@@ -1,14 +1,14 @@
 clear; clc; close all;
 
 load('calib_asus.mat');
-path='maizena3/data_rgb/';
+path='lab2/';
     
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
 
-load([path 'depth1_1.mat'])
+load([path 'depth1_01.mat'])
 dep1=depth_array;
-load([path 'depth2_1.mat'])
+load([path 'depth2_01.mat'])
 dep2=depth_array;
 
 
@@ -58,8 +58,8 @@ set(h3,'color','g');
 %------------------------Plot common points
 
 clear im1 im2;
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
 figure(3); image(cat(2, im1, im2));
 
 xa = fa(1,matches(1,:));
@@ -82,8 +82,8 @@ axis image off;
 %---------------------Point Clouds
 
 clear im1 im2;
-im1=imread([path 'rgb_image1_1.png']);
-im2=imread([path 'rgb_image2_1.png']);
+im1=imread([path 'rgb_image1_01.png']);
+im2=imread([path 'rgb_image2_01.png']);
 
 dep1(find(dep1>2000))=0; dep2(find(dep2>2000))=0; %eliminate objects that are too far away
 
