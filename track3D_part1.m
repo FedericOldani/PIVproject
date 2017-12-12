@@ -1,13 +1,14 @@
 %function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObj = 4000; %2 meters
-objPixelSize = 2000; %more than 900 pixels
+farAwayObj = 4000; %4 meters
+
+objPixelSize = 2000; %more than 2000 pixels
 cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
 nearPoints = 50; %nearest X points to some point; professor said 10
 accept3dPoints = 1000; %accept objects > 1000 3d points
-waitSeconds = 4; %See the image for 7 seconds
+waitSeconds = 7; %See the image for 7 seconds
 
 bgdist=0.2;
 faraway=4000;
