@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='lab2/';
+path='maizena3/data_rgb/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
