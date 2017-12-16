@@ -1,17 +1,16 @@
 function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObj = 2000; %4 meters
+farAwayObj = 4000; %4 meters
 
 objPixelSize = 2000; %more than 2000 pixels
-cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
 nearPoints = 50; %nearest X points to some point; professor said 10
-accept3dPoints = 1000; %accept objects > 1000 3d points
+accept3dPoints = 2000; %accept objects > 1000 3d points
 waitSeconds = 4; %See the image for 7 seconds
 
 bgdist=0.2;
-faraway=2000;
+faraway=4000;
 objsize=1000;
 
 bg1=get_bg(imgseq1);
@@ -24,7 +23,7 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 
 
 for i=1:length(imgseq1)
-%       i=1; 
+%       i=14; 
     
     new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'f',{});
     close all;
@@ -34,7 +33,7 @@ for i=1:length(imgseq1)
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1, bgdist, faraway, objsize);
-    %obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
+    %obj1=bwpropfilt(obj1,'EulerNumber',[acceptHoles 1]);%remove regions with many holes    
   
     [L1, num1]=bwlabel(obj1,8);
     
@@ -48,7 +47,7 @@ for i=1:length(imgseq1)
     dep2=depth_array;
 
     obj2=remove_bg(dep2,bg2, bgdist, faraway, objsize);
-    %obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove regions with many holes
+    %obj2=bwpropfilt(obj2,'EulerNumber',[acceptHoles 1]);%remove regions with many holes
 
     [L2, num2]=bwlabel(obj2,8);
     
@@ -235,7 +234,7 @@ for i=1:length(imgseq1)
     vector_old_obj=[];
     clear loc1;
     clear loc2;
-end
+ end
 
 
 

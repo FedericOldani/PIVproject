@@ -85,7 +85,7 @@ axis image off;
 clear; 
 
 load('calib_asus.mat');
-path='maizena3/data_rgb/';
+path='lab2/';
     
 im1=imread([path 'rgb_image1_01.png']);
 im2=imread([path 'rgb_image2_01.png']);
@@ -99,7 +99,7 @@ dep2=depth_array;
 
 %--------------------Matching with rgbd
 
-dep1(find(dep1>2000))=0; dep2(find(dep2>2000))=0; %eliminate objects that are too far away
+dep1(find(dep1>4000))=0; dep2(find(dep2>4000))=0; %eliminate objects that are too far away
 xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
 xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', Depth_cam.K,1,0);
 rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
