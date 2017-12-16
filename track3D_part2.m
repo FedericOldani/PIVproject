@@ -1,100 +1,42 @@
 function [objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params)
 
-%changing variables!!!
-farAwayObj = 2000; %4 meters
+%Initializations
+i=1;
+niter=200; 
+errorthresh=0.1;
 
-for i=1:length(imgseq1)
-    %Load depth
-    load(imgseq1(i).depth);
-    dep1=depth_array;
-    load(imgseq2(i).depth);
-    dep2=depth_array;
+%Load depth
+load(imgseq1(i).depth);
+dep1=depth_array;
+load(imgseq2(i).depth);
+dep2=depth_array;
 
-    %Load images
-    im1=imread(imgseq1(i).rgb);
-    im2=imread(imgseq2(i).rgb); 
+%Load images
+im1=imread(imgseq1(i).rgb);
+im2=imread(imgseq2(i).rgb); 
 
-    %Eliminate distant objects
-    dep1(find(dep1>farAwayObj))=0;
-    dep2(find(dep2>farAwayObj))=0;
+%Image parameters matched in xyz and rgb
+[xyz1,rgbd1]=ImageParameters(dep1,im1,cam_params);
+[xyz2,rgbd2]=ImageParameters(dep2,im2,cam_params);
 
-    %Image parameters matched in xyz and rgb
-    [xyz1,rgbd1]=ImageParameters(dep1,im1,cam_params);
-    [xyz2,rgbd2]=ImageParameters(dep2,im2,cam_params);
-%     xyz1=get_xyzasus(dep1(:),[480 640],(1:640*480)', cam_params.Kdepth,1,0);
-%     xyz2=get_xyzasus(dep2(:),[480 640],(1:640*480)', cam_params.Kdepth,1,0);
-%     rgbd1 = get_rgbd(xyz1, im1, cam_params.R, cam_params.T, cam_params.Krgb);
-%     rgbd2 = get_rgbd(xyz2, im2, cam_params.R, cam_params.T, cam_params.Krgb);
+%Matching key features
+rgbd1aux = single(rgb2gray(rgbd1));
+rgbd2aux = single(rgb2gray(rgbd2));
+[fa, da] = vl_sift(rgbd1aux,'edgethresh',30,'PeakThresh',0);
+[fb, db] = vl_sift(rgbd2aux,'edgethresh',30,'PeakThresh',0);
+[matches, scores] = vl_ubcmatch(da, db);
 
-    %Matching key features
-    rgbd1aux = single(rgb2gray(rgbd1));
-    rgbd2aux = single(rgb2gray(rgbd2));
-    [fa, da] = vl_sift(rgbd1aux,'edgethresh',30,'PeakThresh',0);
-    [fb, db] = vl_sift(rgbd2aux,'edgethresh',30,'PeakThresh',0);
-    [matches, scores] = vl_ubcmatch(da, db);
+%Get coordenates of those matches
+xa=fa(1,matches(1,:)); xa=fix(xa); x1=xa';
+xb=fb(1,matches(2,:)); xb=fix(xb); x2=xb';
+ya=fa(2,matches(1,:)); ya=fix(ya); y1=ya';
+yb=fb(2,matches(2,:)); yb=fix(yb); y2=yb';
 
-    %Get coordenates of those matches
-    xa=fa(1,matches(1,:)); xa=fix(xa); x1=xa';
-    xb=fb(1,matches(2,:)); xb=fix(xb); x2=xb';
-    ya=fa(2,matches(1,:)); ya=fix(ya); y1=ya';
-    yb=fb(2,matches(2,:)); yb=fix(yb); y2=yb';
-
-    %RANSAC
-    %Initializations
-    niter=200; 
-    errorthresh=0.1;
-    R=[]; T=[]; numinliers=[]; 
-
-    %Convert to linear indexes
-    ind1=sub2ind([480 640],y1,x1);
-    ind2=sub2ind([480 640],y2,x2);
-
-    %Get the corresponting points in xyz
-    P1=xyz1(ind1,:);
-    P2=xyz2(ind2,:);
-
-    %Valid points
-    inds=find((P1(:,3).*P2(:,3))>0);
-    P1=P1(inds,:);P2=P2(inds,:);
-
-    %Makes random sets of 4 indexes
-    randind=size(P1,1);
-    aux=fix(1+randind*rand(4*niter,1));
-
-    %Test those sets
-    for k=1:niter-4,
-        %Select 4 points to estimate the inliers
-        P1aux=P1(aux(4*k:4*k+3),:);
-        P2aux=P2(aux(4*k:4*k+3),:);  
-
-        [d,xx,tr]=procrustes(P1aux,P2aux,'scaling',false,'reflection',false);
-        R=[R tr.T]; T=[T tr.c];
-
-        %Model
-        erro=P1-P2*tr.T-ones(length(P2),1)*tr.c(1,:);
-        %Compute the norm2 and count the number of inliers
-        numinliers=[numinliers length(find(sum(erro.*erro,2)<errorthresh^2))];  
-    end
-
-%Identify which R and T gets the maximum number of inliers
-[mm,ind]=max(numinliers);
-R=R(:,(ind-1)*3+1:(ind-1)*3+3);
-T=T(1,(ind-1)*3+1:(ind-1)*3+3);
-
-%Find the inliers
-erro=P1-P2*R-ones(length(P2),1)*T;
-inds=find(sum(erro.*erro,2)<errorthresh^2); 
-
-%Fetch the inliers
-P1=P1(inds,:); 
-P2=P2(inds,:);
-
- %Use those inliers to compute the final transformation
-[d,xx,tr]=procrustes(P1,P2,'scaling',false,'reflection',false);
+%RANSAC
+tr=ransactr(xyz1, x1, y1, xyz2, x2, y2, niter, errorthresh);
 
 %Transformations
 cam1toW=struct('R',eye(3),'T',zeros(1,3));
 cam2toW=struct('R',tr.T,'T',tr.c);
 objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
 
-end
