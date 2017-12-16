@@ -22,8 +22,8 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 %eliminate bg for all images in dataset
 
 
-%for i=1:length(imgseq1)
-       i=14; 
+for i=1:length(imgseq1)
+%       i=14; 
     
     new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'f',{});
     close all;
@@ -234,7 +234,7 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
     vector_old_obj=[];
     clear loc1;
     clear loc2;
-% end
+ end
 
 
 

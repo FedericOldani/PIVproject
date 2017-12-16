@@ -1,17 +1,16 @@
 %function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObj = 2000; %4 meters
+farAwayObj = 4000; %4 meters
 
 objPixelSize = 2000; %more than 2000 pixels
-cmFromBG = 0.05; %5cm from background
 acceptHoles = -30; %accept atleast 25 holes!!!
 nearPoints = 50; %nearest X points to some point; professor said 10
-accept3dPoints = 1000; %accept objects > 1000 3d points
-waitSeconds = 7; %See the image for 7 seconds
+accept3dPoints = 2000; %accept objects > 1000 3d points
+waitSeconds = 4; %See the image for 7 seconds
 
 bgdist=0.2;
-faraway=2000;
+faraway=4000;
 objsize=1000;
 
 bg1=get_bg(imgseq1);
@@ -24,7 +23,7 @@ objects=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{});
 
 
 for i=1:length(imgseq1)
-%       i=1; 
+%       i=14; 
     
     new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'f',{});
     close all;
@@ -34,7 +33,7 @@ for i=1:length(imgseq1)
     load(imgseq1(i).depth);
     dep1=depth_array;
     obj1=remove_bg(dep1, bg1, bgdist, faraway, objsize);
-    %obj1=bwpropfilt(obj1,'EulerNumber',[-30 1]);%remove regions with many holes    
+    %obj1=bwpropfilt(obj1,'EulerNumber',[acceptHoles 1]);%remove regions with many holes    
   
     [L1, num1]=bwlabel(obj1,8);
     
@@ -48,7 +47,7 @@ for i=1:length(imgseq1)
     dep2=depth_array;
 
     obj2=remove_bg(dep2,bg2, bgdist, faraway, objsize);
-    %obj2=bwpropfilt(obj2,'EulerNumber',[-30 1]);%remove regions with many holes
+    %obj2=bwpropfilt(obj2,'EulerNumber',[acceptHoles 1]);%remove regions with many holes
 
     [L2, num2]=bwlabel(obj2,8);
     
@@ -143,7 +142,7 @@ for i=1:length(imgseq1)
         hold on;
         if length(find(idx==n))>accept3dPoints %more than 1000 3d points
             j=j+1;
-            fprintf("printing>");
+            fprintf('printing>');
             plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
             box=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
             plot_box(box);
@@ -154,12 +153,9 @@ for i=1:length(imgseq1)
             new_obj(j).Z(1,:)=box(:,3)'; 
             
             a=obj3d(idx==n,4);
-            a=(a(a~=0);
+            a=a(a~=0);
             for z=1:length(a)
-                featIndex=obj3d(a(z),4)
-                if a(z)~=0
-                    new_obj(j).f(end+1)=f(a(z));
-                end
+                new_obj(j).f(end+1,:)=f(a(z),:);        
             end
         else
             box(:,:,n)=zeros(8,3);
@@ -175,8 +171,12 @@ for i=1:length(imgseq1)
             abs_distance_matrix=ones(j,number_obj_prev)*inf;
             for q=1:j
                 for y=1:number_obj_prev
-                    indexPairs = matchFeatures(new_obj(q).f,old_obj(y).f) ;
-                    abs_distance_matrix(q,y)=length(indexPairs);
+                    if ~isempty(new_obj(q).f) && ~isempty(old_obj(y).f)
+                        indexPairs = matchFeatures(new_obj(q).f,old_obj(y).f) ;
+                        abs_distance_matrix(q,y)=length(indexPairs);
+                    else
+                        abs_distance_matrix(q,y)=0;
+                    end
                 end
             end
             
@@ -184,21 +184,21 @@ for i=1:length(imgseq1)
             while more==1
                 more=0;
                 
-                [~,index]=max(abs_distance_matrix(:));
+                [m,index]=max(abs_distance_matrix(:));
                 [q,y]=ind2sub(size(abs_distance_matrix),index);
                 
-                if abs_distance_matrix(q,y)>0 && abs_distance_matrix(q,y)~=inf
+                if abs_distance_matrix(q,y)>0 && abs_distance_matrix(q,y)~=-inf
                     objects(old_obj(y).index).frames_tracked(end+1)= i;
                     objects(old_obj(y).index).X(end+1,:)=new_obj(q).X(1,:);
-                    objects(old_obj(y).index).Y(end+1,:)=new_obj(q).Y(1,:);
+                    objectsobj1(old_obj(y).index).Y(end+1,:)=new_obj(q).Y(1,:);
                     objects(old_obj(y).index).Z(end+1,:)=new_obj(q).Z(1,:);
                     new_obj(q).index=old_obj(y).index;
                     tag=old_obj(y).index;
                     txt=['object' int2str(tag)];
                     text(new_obj(q).X(1),new_obj(q).Y(1),new_obj(q).Z(1),txt);
                     
-                    abs_distance_matrix(:,y)=inf;
-                    abs_distance_matrix(q,:)=inf;
+                    abs_distance_matrix(:,y)=-inf;
+                    abs_distance_matrix(q,:)=-inf;
                     more=1;
                     
                     vector_old_obj=[vector_old_obj q];
@@ -207,8 +207,7 @@ for i=1:length(imgseq1)
         end
         
         idx_new_obj=setdiff(1:j,vector_old_obj);
-        %     [idx_new_obj,~]=find(abs_distance_matrix~=inf);
-        %     idx_new_obj=unique(idx_new_obj,'rows');
+
         
         for p=1:length(idx_new_obj)
             r=idx_new_obj(p);
@@ -235,7 +234,7 @@ for i=1:length(imgseq1)
     vector_old_obj=[];
     clear loc1;
     clear loc2;
-end
+ end
 
 
 
