@@ -1,7 +1,7 @@
 function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
-farAwayObj = 2000; %4 meters
+farAwayObj = 4000; %4 meters
 
 objPixelSize = 2000; %more than 2000 pixels
 cmFromBG = 0.05; %5cm from background
