@@ -1,4 +1,4 @@
-%function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
+function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
 %changing variables!!!
 farAwayObj = 2000; %4 meters
@@ -143,7 +143,7 @@ for i=1:length(imgseq1)
         hold on;
         if length(find(idx==n))>accept3dPoints %more than 1000 3d points
             j=j+1;
-            fprintf("printing>");
+            fprintf('printing>');
             plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
             box=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
             plot_box(box);

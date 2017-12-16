@@ -47,11 +47,12 @@ load(imgseq2(1).depth);
 dep2=depth_array;
 tr=rt_computation(im1,dep1,im2,dep2);
 
-cam1toW=struct('R',eye(3),'T',zeros(3,1));
+cam1toW=struct('R',eye(3),'T',zeros(1,3));
 cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the translation
 
 
 % objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
+[objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params);
 
 
 %% test
