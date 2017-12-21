@@ -1,4 +1,4 @@
-function [objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params)
+%function [objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params)
 
 %Initializations
 i=1;
@@ -22,8 +22,8 @@ im2=imread(imgseq2(i).rgb);
 %Matching key features
 rgbd1aux = single(rgb2gray(rgbd1));
 rgbd2aux = single(rgb2gray(rgbd2));
-[fa, da] = vl_sift(rgbd1aux,'edgethresh',30,'PeakThresh',0);
-[fb, db] = vl_sift(rgbd2aux,'edgethresh',30,'PeakThresh',0);
+[fa, da] = vl_sift(rgbd1aux,'edgethresh',130,'PeakThresh',0);
+[fb, db] = vl_sift(rgbd2aux,'edgethresh',130,'PeakThresh',0);
 [matches, scores] = vl_ubcmatch(da, db);
 
 %Get coordenates of those matches
@@ -38,5 +38,5 @@ tr=ransactr(xyz1, x1, y1, xyz2, x2, y2, niter, errorthresh);
 %Transformations
 cam1toW=struct('R',eye(3),'T',zeros(1,3));
 cam2toW=struct('R',tr.T,'T',tr.c);
-objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
+%objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
 

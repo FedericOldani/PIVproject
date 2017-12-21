@@ -3,12 +3,12 @@ clear; clc; close all;
 load('calib_asus.mat');
 path='lab2/';
     
-im1=imread([path 'rgb_image1_01.png']);
-im2=imread([path 'rgb_image2_01.png']);
+im1=imread([path 'rgb_image1_22.png']);
+im2=imread([path 'rgb_image2_21.png']);
 
-load([path 'depth1_01.mat'])
+load([path 'depth1_22.mat'])
 dep1=depth_array;
-load([path 'depth2_01.mat'])
+load([path 'depth2_21.mat'])
 dep2=depth_array;
 
 
@@ -58,8 +58,8 @@ set(h3,'color','g');
 %------------------------Plot common points
 
 clear im1 im2;
-im1=imread([path 'rgb_image1_01.png']);
-im2=imread([path 'rgb_image2_01.png']);
+im1=imread([path 'rgb_image1_22.png']);
+im2=imread([path 'rgb_image2_21.png']);
 figure(3); image(cat(2, im1, im2));
 
 xa = fa(1,matches(1,:));
@@ -87,12 +87,12 @@ clear;
 load('calib_asus.mat');
 path='lab2/';
     
-im1=imread([path 'rgb_image1_01.png']);
-im2=imread([path 'rgb_image2_01.png']);
+im1=imread([path 'rgb_image1_20.png']);
+im2=imread([path 'rgb_image1_21.png']);
 
-load([path 'depth1_01.mat'])
+load([path 'depth1_20.mat'])
 dep1=depth_array;
-load([path 'depth2_01.mat'])
+load([path 'depth1_21.mat'])
 dep2=depth_array;
 
 
@@ -106,8 +106,8 @@ rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
 rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
 rgbd1aux = single(rgb2gray(rgbd1));
 rgbd2aux = single(rgb2gray(rgbd2));
-[fa, da] = vl_sift(rgbd1aux,'edgethresh',30,'PeakThresh',0);
-[fb, db] = vl_sift(rgbd2aux,'edgethresh',30,'PeakThresh',0);
+[fa, da] = vl_sift(rgbd1aux,'edgethresh',130,'PeakThresh',0);
+[fb, db] = vl_sift(rgbd2aux,'edgethresh',130,'PeakThresh',0);
 [matches, scores] = vl_ubcmatch(da, db);
 xa = fa(1,matches(1,:));
 xb = fb(1,matches(2,:));

@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='lab1/';
+path='maizena4/data_rgb/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
@@ -53,19 +53,21 @@ cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the tra
 
 
 % objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
-[objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params);
+%[objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params);
 
 
 %% test
-i=19;
+i=5;
 for k=1:length(objects(i).frames_tracked)
     figure(1);
-    plot3(objects(i).X(k,:) , objects(i).Y(k,:),objects(i).Z(k,:),'.');hold on;
-    
-    figure(2);
-    im1 =imread( imgseq1(objects(i).frames_tracked(k)).rgb);
-    imshow(im1)
-    pause(0.5);
+        middle(1)=sum(objects(i).X(k,:))/8;
+        middle(2)=sum(objects(i).Y(k,:))/8;
+        middle(3)=sum(objects(i).Z(k,:))/8;
+        plot3(middle(1),middle(2),middle(3),'.');hold on;
+%         figure(2);
+%     im1 = imread( imgseq1(objects(i).frames_tracked(k)).rgb);
+%     imshow(im1)
+    pause(1);
 end
 
 
