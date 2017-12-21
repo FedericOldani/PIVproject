@@ -53,7 +53,7 @@ cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the tra
 
 
 % objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
-%[objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params);
+[objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_params);
 
 
 %% test
