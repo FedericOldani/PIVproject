@@ -10,7 +10,7 @@ accept3dPoints = 2000; %accept objects > 1000 3d points
 waitSeconds = 5; %See the image for 7 seconds
 
 bgdist=0.2;
-faraway=4000;
+faraway=farAwayObj;
 objsize=2000;
 
 bg1=get_bg(imgseq1);
@@ -40,7 +40,7 @@ for i=1:length(imgseq1)
 %    obj1=bwpropfilt(obj1,'EulerNumber',[acceptHoles 1]);%remove regions with many holes
     
     [L1, num1]=bwlabel(obj1,8);
-    
+    L1 = imfill(L1,'holes');
     %      se = strel('disk',10);
     %      L1=imopen(L1,se);
     
@@ -55,8 +55,7 @@ for i=1:length(imgseq1)
     %     obj2 = imfill(obj2,'holes');
     
     [L2, num2]=bwlabel(obj2,8);
-    
-    %      L2=imopen(L2,se);
+    L2 = imfill(L2,'holes');
     
     im1=imread(imgseq1(i).rgb);
     im2=imread(imgseq2(i).rgb);
@@ -269,7 +268,4 @@ for i=1:length(imgseq1)
     clear loc1;
     clear loc2;
 end
-
-
-%% 21 22
 
