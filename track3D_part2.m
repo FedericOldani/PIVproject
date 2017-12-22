@@ -4,7 +4,7 @@ function [objects, cam1toW, cam2toW] = track3D_part2( imgseq1, imgseq2,   cam_pa
 %i=1;
 niter=200;
 numMatches=[];
-errorthresh=0.05;
+errorthresh=500;%0.05;
 
 %Find the image with the most matches
 for i=1:length(imgseq1)
