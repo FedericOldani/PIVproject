@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='lab2/';
+path='maizena_chocapics/data_rgb/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
@@ -58,7 +58,7 @@ cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the tra
 
 %% test
 close all;
-i=17;
+i=2;
 for k=1:length(objects(i).frames_tracked)
     figure(1);
         middle(1)=sum(objects(i).X(k,:))/8;

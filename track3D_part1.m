@@ -264,3 +264,4 @@ for i=1:length(imgseq1)
     clear loc2;
 end
 
+close all;
