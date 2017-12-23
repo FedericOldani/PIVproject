@@ -15,4 +15,3 @@ end
 bg=median(imgmed,3);
 
 
-

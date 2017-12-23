@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='tworoooms/data_rgb/';
+path='lab2/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
@@ -57,16 +57,17 @@ cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the tra
 
 
 %% test
-i=5;
+close all;
+i=17;
 for k=1:length(objects(i).frames_tracked)
     figure(1);
         middle(1)=sum(objects(i).X(k,:))/8;
         middle(2)=sum(objects(i).Y(k,:))/8;
         middle(3)=sum(objects(i).Z(k,:))/8;
         plot3(middle(1),middle(2),middle(3),'.');hold on;
-%         figure(2);
-%     im1 = imread( imgseq1(objects(i).frames_tracked(k)).rgb);
-%     imshow(im1)
+        figure(2);
+    im1 = imread( imgseq1(objects(i).frames_tracked(k)).rgb);
+    imshow(im1)
     pause(1);
 end
 

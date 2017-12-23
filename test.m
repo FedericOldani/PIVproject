@@ -1,14 +1,14 @@
 clear; clc; close all;
 
 load('calib_asus.mat');
-path='lab2/';
+path='maizena4/data_rgb/';
     
-im1=imread([path 'rgb_image1_22.png']);
-im2=imread([path 'rgb_image2_21.png']);
+im1=imread([path 'rgb_image2_03.png']);
+im2=imread([path 'rgb_image2_04.png']);
 
-load([path 'depth1_22.mat'])
+load([path 'depth2_03.mat'])
 dep1=depth_array;
-load([path 'depth2_21.mat'])
+load([path 'depth2_04.mat'])
 dep2=depth_array;
 
 
@@ -58,8 +58,8 @@ set(h3,'color','g');
 %------------------------Plot common points
 
 clear im1 im2;
-im1=imread([path 'rgb_image1_22.png']);
-im2=imread([path 'rgb_image2_21.png']);
+im1=imread([path 'rgb_image2_03.png']);
+im2=imread([path 'rgb_image2_04.png']);
 figure(3); image(cat(2, im1, im2));
 
 xa = fa(1,matches(1,:));
