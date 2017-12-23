@@ -24,8 +24,8 @@ for i=1:length(imgseq1)
     %Matching key features
     rgbd1aux = single(rgb2gray(rgbd1));
     rgbd2aux = single(rgb2gray(rgbd2));
-    [fa, da] = vl_sift(rgbd1aux,'edgethresh',130,'PeakThresh',0);
-    [fb, db] = vl_sift(rgbd2aux,'edgethresh',130,'PeakThresh',0);
+    [fa, da] = vl_sift(rgbd1aux,'edgethresh',500,'PeakThresh',0);
+    [fb, db] = vl_sift(rgbd2aux,'edgethresh',500,'PeakThresh',0);
     [matches, scores] = vl_ubcmatch(da, db);
     [n m]=size(matches);
     numMatches=[numMatches m];
@@ -47,7 +47,7 @@ rgbd2 = get_rgbd(xyz2, im2, cam_params.R, cam_params.T, cam_params.Krgb);
 rgbd1aux = single(rgb2gray(rgbd1));
 rgbd2aux = single(rgb2gray(rgbd2));
 [fa, da] = vl_sift(rgbd1aux,'edgethresh',500,'PeakThresh',0);
-[fb, db] = vl_sift(rgbd2aux,'edgethresh',500,'PeakThresh',0);%7.5 12.5
+[fb, db] = vl_sift(rgbd2aux,'edgethresh',500,'PeakThresh',0);
 [matches, scores] = vl_ubcmatch(da, db);
 
 %Get coordenates of those matches

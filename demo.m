@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='maizena_chocapics/data_rgb/';
+path='tworoooms/data_rgb/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
