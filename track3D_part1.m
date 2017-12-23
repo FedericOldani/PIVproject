@@ -1,5 +1,6 @@
 function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
 
+print=1;
 farAwayObj = 4000; %4 meters
 
 objPixelSize = 2000; %more than 2000 pixels
@@ -24,8 +25,9 @@ for i=1:length(imgseq1)
     vector_old_obj=[];
     new_obj=struct('X',{[]},'Y',{[]},'Z',{[]},'frames_tracked',{},'f',{},'f1',{},'f2',{});
     
-    %close all;
-    
+    if print==1
+        close all;
+    end
     
     fprintf('\n%d...',i);
     % ----------------------  get objects in image1   ----------------------
@@ -144,9 +146,12 @@ for i=1:length(imgseq1)
             idx=bins;
         end
         
-        %figure();
         j=0;%index to save 'new_obj'
-        %pcshow(pcmerge(pc1,pc2,0.001));
+        
+        if print==1
+            figure();
+            pcshow(pcmerge(pc1,pc2,0.001));
+        end
         
         for n=1:max(idx) %num of objects
             
@@ -154,11 +159,12 @@ for i=1:length(imgseq1)
             if length(find(idx==n))>accept3dPoints %more than 1000 3d points
                 j=j+1;
                 fprintf(' object detect>');
-                %plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
                 box=corner3d(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3));
-                %plot_box(box);
-                %hold on;
-                
+                if print==1
+                    plot3(obj3d(idx==n,1),obj3d(idx==n,2),obj3d(idx==n,3),'.','MarkerSize',10); hold on;
+                    plot_box(box);
+                    hold on;
+                end
                 new_obj(j).X(1,:)=box(:,1)';
                 new_obj(j).Y(1,:)=box(:,2)';
                 new_obj(j).Z(1,:)=box(:,3)';
@@ -223,7 +229,9 @@ for i=1:length(imgseq1)
                         new_obj(q).index=old_obj(y).index;
                         tag=old_obj(y).index;
                         txt=['object' int2str(tag)];
-                        %text(new_obj(q).X(1),new_obj(q).Y(1),new_obj(q).Z(1),txt);
+                        if print==1
+                           text(new_obj(q).X(1),new_obj(q).Y(1),new_obj(q).Z(1),txt);
+                        end
                         
                         abs_distance_matrix(:,y)=-inf;
                         abs_distance_matrix(q,:)=-inf;
@@ -246,11 +254,14 @@ for i=1:length(imgseq1)
                 tag=length(objects);
                 new_obj(r).index=length(objects);
                 txt=['object' int2str(tag)];
-                %text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
+                if print==1
+                    text(new_obj(r).X(1),new_obj(r).Y(1),new_obj(r).Z(1),txt);
+                end
             end
-            
-            %pause(waitSeconds); %seconds to see the image
+            if print==1
+            pause(waitSeconds); %seconds to see the image
             %input('continua');
+            end
             
             number_obj_prev=j;
             clear old_obj;
