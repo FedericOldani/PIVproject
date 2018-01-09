@@ -1,6 +1,8 @@
 function objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW)
+cam1toW.T=cam1toW.T';
+cam2toW.T=cam2toW.T';
 
-print=1;
+print=0;
 farAwayObj = 4000; %4 meters
 
 objPixelSize = 2000; %more than 2000 pixels

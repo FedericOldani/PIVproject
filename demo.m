@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-path='tworoooms/data_rgb/';
+path='lab2/';
 
 %depth path
 depdir1=dir([path 'depth1*.mat']);
@@ -47,8 +47,8 @@ load(imgseq2(1).depth);
 dep2=depth_array;
 tr=rt_computation(im1,dep1,im2,dep2);
 
-cam1toW=struct('R',eye(3),'T',zeros(1,3));
-cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the translation
+cam1toW=struct('R',eye(3),'T',zeros(3,1));
+cam2toW=struct('R',tr.T,'T',tr.c(1,:)');%tr.T is the rotation matrix, %tr.c is the translation
 
 
 
@@ -58,7 +58,7 @@ cam2toW=struct('R',tr.T,'T',tr.c);%tr.T is the rotation matrix, %tr.c is the tra
 
 %% test
 close all;
-i=2;
+i=17;
 for k=1:length(objects(i).frames_tracked)
     figure(1);
         middle(1)=sum(objects(i).X(k,:))/8;
