@@ -61,6 +61,6 @@ tr=ransactr(xyz1, x1, y1, xyz2, x2, y2, niter, errorthresh);
 
 %Transformations
 cam1toW=struct('R',eye(3),'T',zeros(3,1));
-cam2toW=struct('R',tr.T,'T',tr.c(1,:)');
+cam2toW=struct('R',tr.T','T',tr.c(1,:)');
 objects = track3D_part1( imgseq1, imgseq2,   cam_params,  cam1toW, cam2toW);
 
